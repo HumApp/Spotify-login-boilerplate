@@ -33,10 +33,10 @@ RCT_EXPORT_METHOD(authenticate:(RCTResponseSenderBlock)callback)
   /*
    * Sets everything up
    */
-  
+
   // The spotify client id
-  [[SPTAuth defaultInstance] setClientID:@"[your-client-id]"];
-  
+  [[SPTAuth defaultInstance] setClientID:@"fdaf12a8f6e44ae19b85bd44f846a7ca"];
+
   // The callback (called Custom URL Scheme in XCode project configuration)
   [[SPTAuth defaultInstance] setRedirectURL:[NSURL URLWithString:@"my-app-auth://spotify"]];
 
@@ -44,25 +44,25 @@ RCT_EXPORT_METHOD(authenticate:(RCTResponseSenderBlock)callback)
   [[SPTAuth defaultInstance] setRequestedScopes:@[SPTAuthUserReadPrivateScope, SPTAuthUserReadEmailScope, SPTAuthUserFollowReadScope]];
 
   // OPTIONAL. Allows retrieval of refresheable tokens. If not specified, it uses the 'Implicit Grant' auth workflow
-  //[[SPTAuth defaultInstance] setTokenSwapURL: [NSURL URLWithString:@"http://localhost:8000/authenticator/spotify-token-swap"]];
-  
+  [[SPTAuth defaultInstance] setTokenSwapURL: [NSURL URLWithString:@"http://localhost:8000/authenticator/spotify-token-swap"]];
+
   /*
    * Creates and opens a Spotify Auth Webview
    */
-  
+
   // Construct a login URL and open it
   NSURL *loginURL = [[SPTAuth defaultInstance] spotifyWebAuthenticationURL];
-  
+
   //save the login callback
   SpotifyModule *spotifyModule = (SpotifyModule *)[SpotifyModule sharedManager];
   spotifyModule.loginCallback = callback;
-  
+
   //setup event dispatcher
   spotifyModule.eventDispatcher = [[RCTEventDispatcher alloc] init];
   [spotifyModule.eventDispatcher setValue:self.bridge forKey:@"bridge"];
-  
+
   RCTLogInfo(@"%@", loginURL);
-  
+
   // Opening a URL in Safari close to application launch may trigger
   // an iOS bug, so we wait a bit before doing so.
   [[UIApplication sharedApplication] openURL:loginURL];
@@ -73,33 +73,33 @@ RCT_EXPORT_METHOD(authenticate:(RCTResponseSenderBlock)callback)
  * (Here it would be whenever the webview redirects to: 'my-super-application://callback')
  */
 + (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-  
+
   RCTLogInfo(@"Login Callback");
-  
+
   // Ask SPTAuth if the URL given is a Spotify authentication callback
   if ([[SPTAuth defaultInstance] canHandleURL:url]) {
-    
+
     // The 'session' object contains all the data returned by the Spotify API
     [[SPTAuth defaultInstance] handleAuthCallbackWithTriggeredAuthURL:url callback:^(NSError *error, SPTSession *session) {
-      
+
       // If anything failed, logs the error then returns
       if (error != nil) {
         NSLog(@"*** Auth error: %@", error);
         return;
       }
-      
+
       RCTLogInfo(@"Login Successful");
-      
+
       SpotifyModule *spotifyModule = (SpotifyModule *)[SpotifyModule sharedManager];
       spotifyModule.session = session;
-      
+
       // The object that will be returned to the JS callback
       NSDictionary *inventory = nil;
-      
+
       // Converts the NSDate expiration date to a Unix timestamp
       NSTimeInterval timestamp = [session.expirationDate timeIntervalSince1970];
       NSString *expirationDate = [NSString stringWithFormat:@"%ld", (long)timestamp];
-      
+
       // If a token swap URL was provided, extracts all the fields
       if([[SPTAuth defaultInstance] hasTokenSwapService])
       {
@@ -120,14 +120,14 @@ RCT_EXPORT_METHOD(authenticate:(RCTResponseSenderBlock)callback)
                       @"expirationDate": expirationDate
                       };
       }
-      
+
       // Sends the 'inventory' object to the js Callback
       spotifyModule.loginCallback(@[inventory]);
     }];
-    
+
     return YES;
   }
-  
+
   return NO;
 }
 

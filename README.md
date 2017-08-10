@@ -33,4 +33,4 @@ react-native run-ios
 
 Open the remote js debugger so you can see `console.log` output.
 
-You can then click on the `Spotify Auth` button, log yourself in and you'll see your token in the console.
+You can then click on the `Spotify Auth` button, log yourself in and you'll see your token in the console.# Spotify-login-boilerplate
